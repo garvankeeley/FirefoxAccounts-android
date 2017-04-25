@@ -6,18 +6,16 @@ package org.mozilla.gecko.db;
 
 import java.util.HashMap;
 
-import org.mozilla.gecko.CrashHandler;
-import org.mozilla.gecko.GeckoApp;
-import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoMessageReceiver;
-import org.mozilla.gecko.NSSBridge;
+//import org.mozilla.gecko.GeckoApp;
+//import org.mozilla.gecko.GeckoMessageReceiver;
+//import org.mozilla.gecko.NSSBridge;
 import org.mozilla.gecko.db.BrowserContract.DeletedPasswords;
 import org.mozilla.gecko.db.BrowserContract.GeckoDisabledHosts;
 import org.mozilla.gecko.db.BrowserContract.Passwords;
-import org.mozilla.gecko.mozglue.GeckoLoader;
+//import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.sqlite.MatrixBlobCursor;
 import org.mozilla.gecko.sqlite.SQLiteBridge;
-import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.util.SyncUtils;
 
 import android.content.ContentValues;
 import android.content.Intent;
@@ -54,8 +52,6 @@ public class PasswordsProvider extends SQLiteBridgeContentProvider {
     private static final String WHERE_GUID_IS_VALUE = BrowserContract.DeletedPasswords.GUID + " = ?";
 
     private static final String LOG_TAG = "GeckoPasswordsProvider";
-
-    private CrashHandler mCrashHandler;
 
     static {
         URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
@@ -98,22 +94,10 @@ public class PasswordsProvider extends SQLiteBridgeContentProvider {
 
     @Override
     public boolean onCreate() {
-        mCrashHandler = CrashHandler.createDefaultCrashHandler(getContext());
-
         // We don't use .loadMozGlue because we're in a different process,
         // and we just want to reuse code rather than use the loader lock etc.
-        GeckoLoader.doLoadLibrary(getContext(), "mozglue");
+        //GeckoLoader.doLoadLibrary(getContext(), "mozglue");
         return super.onCreate();
-    }
-
-    @Override
-    public void shutdown() {
-        super.shutdown();
-
-        if (mCrashHandler != null) {
-            mCrashHandler.unregister();
-            mCrashHandler = null;
-        }
     }
 
     @Override
@@ -210,7 +194,7 @@ public class PasswordsProvider extends SQLiteBridgeContentProvider {
 
                 // Generate GUID for new password. Don't override specified GUIDs.
                 if (!values.containsKey(Passwords.GUID)) {
-                    String guid = Utils.generateGuid();
+                    String guid = SyncUtils.generateGuid();
                     values.put(Passwords.GUID, guid);
                 }
                 String nowString = Long.toString(now);
@@ -242,9 +226,9 @@ public class PasswordsProvider extends SQLiteBridgeContentProvider {
     public void initGecko() {
         // We're not in the main process.  The receiver of this Intent can
         // communicate with Gecko in the main process.
-        Intent initIntent = new Intent(getContext(), GeckoMessageReceiver.class);
-        initIntent.setAction(GeckoApp.ACTION_INIT_PW);
-        mContext.sendBroadcast(initIntent);
+        //Intent initIntent = new Intent(getContext(), GeckoMessageReceiver.class);
+        //initIntent.setAction(GeckoApp.ACTION_INIT_PW);
+        //mContext.sendBroadcast(initIntent);
     }
 
     private String doCrypto(String initialValue, Uri uri, Boolean encrypt) {
@@ -257,15 +241,15 @@ public class PasswordsProvider extends SQLiteBridgeContentProvider {
         try {
             if (encrypt) {
                 if (profilePath != null) {
-                    result = NSSBridge.encrypt(mContext, profilePath, initialValue);
+                    //result = NSSBridge.encrypt(mContext, profilePath, initialValue);
                 } else {
-                    result = NSSBridge.encrypt(mContext, initialValue);
+                    //result = NSSBridge.encrypt(mContext, initialValue);
                 }
             } else {
                 if (profilePath != null) {
-                    result = NSSBridge.decrypt(mContext, profilePath, initialValue);
+                    //result = NSSBridge.decrypt(mContext, profilePath, initialValue);
                 } else {
-                    result = NSSBridge.decrypt(mContext, initialValue);
+                    //result = NSSBridge.decrypt(mContext, initialValue);
                 }
             }
         } catch (Exception ex) {
