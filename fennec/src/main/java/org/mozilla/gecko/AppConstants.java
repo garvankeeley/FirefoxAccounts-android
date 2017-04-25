@@ -24,7 +24,7 @@ import android.os.Build;
 // before RobocopTarget, we instead add o.m.g.AppConstants directly to the
 // Proguard configuration.
 public class AppConstants {
-    public static final String ANDROID_PACKAGE_NAME = "@ANDROID_PACKAGE_NAME@";
+    public static final String ANDROID_PACKAGE_NAME = "org.mozilla.gecko";
     public static final String MANGLED_ANDROID_PACKAGE_NAME = "@MANGLED_ANDROID_PACKAGE_NAME@";
 
     public static final String MOZ_ANDROID_SHARED_FXACCOUNT_TYPE = "@ANDROID_PACKAGE_NAME@_fxaccount";
