@@ -20,7 +20,7 @@ import android.util.Base64;
 import org.mozilla.gecko.db.BrowserContract.DeletedLogins;
 import org.mozilla.gecko.db.BrowserContract.Logins;
 import org.mozilla.gecko.db.BrowserContract.LoginsDisabledHosts;
-import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.util.SyncUtils;
 import org.mozilla.gecko.util.StringUtils;
 
 import java.io.UnsupportedEncodingException;
@@ -410,7 +410,7 @@ public class LoginsProvider extends SharedBrowserDatabaseProvider {
                 values.put(Logins.TIME_CREATED, now);
                 // Generate GUID for new login. Don't override specified GUIDs.
                 if (!values.containsKey(Logins.GUID)) {
-                    final String guid = Utils.generateGuid();
+                    final String guid = SyncUtils.generateGuid();
                     values.put(Logins.GUID, guid);
                 }
                 // The database happily accepts strings for long values; this just lets us re-use
