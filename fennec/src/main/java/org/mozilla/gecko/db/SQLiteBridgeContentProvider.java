@@ -9,8 +9,6 @@ import java.util.HashMap;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoProfile;
-import org.mozilla.gecko.Telemetry;
-import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.sqlite.SQLiteBridge;
 import org.mozilla.gecko.sqlite.SQLiteBridgeException;
 
@@ -120,8 +118,8 @@ public abstract class SQLiteBridgeContentProvider extends ContentProvider {
         boolean dbNeedsSetup = true;
         try {
             String resourcePath = context.getPackageResourcePath();
-            GeckoLoader.loadSQLiteLibs(context, resourcePath);
-            GeckoLoader.loadNSSLibs(context, resourcePath);
+            //GeckoLoader.loadSQLiteLibs(context, resourcePath);
+            //GeckoLoader.loadNSSLibs(context, resourcePath);
             bridge = SQLiteBridge.openDatabase(databasePath, null, 0);
             int version = bridge.getVersion();
             dbNeedsSetup = version != getDBVersion();
@@ -449,7 +447,7 @@ public abstract class SQLiteBridgeContentProvider extends ContentProvider {
             return;
         }
 
-        Telemetry.addToHistogram(histogram, op.getBucket());
+        //Telemetry.addToHistogram(histogram, op.getBucket());
     }
 
     protected abstract String getDBName();
