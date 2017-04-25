@@ -7,12 +7,12 @@ package org.mozilla.gecko.db;
 import java.lang.IllegalArgumentException;
 import java.util.HashMap;
 
-import org.mozilla.gecko.EventDispatcher;
+//import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.db.BrowserContract.FormHistory;
 import org.mozilla.gecko.db.BrowserContract.DeletedFormHistory;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sqlite.SQLiteBridge;
-import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.util.SyncUtils;
 
 import android.content.ContentValues;
 import android.content.UriMatcher;
@@ -112,7 +112,7 @@ public class FormHistoryProvider extends SQLiteBridgeContentProvider {
             case FORM_HISTORY:
                 // Generate GUID for new entry. Don't override specified GUIDs.
                 if (!values.containsKey(FormHistory.GUID)) {
-                    String guid = Utils.generateGuid();
+                    String guid = SyncUtils.generateGuid();
                     values.put(FormHistory.GUID, guid);
                 }
                 break;
@@ -124,7 +124,7 @@ public class FormHistoryProvider extends SQLiteBridgeContentProvider {
 
     @Override
     public void initGecko() {
-        EventDispatcher.getInstance().dispatch("FormHistory:Init", null);
+        //EventDispatcher.getInstance().dispatch("FormHistory:Init", null);
     }
 
     @Override
