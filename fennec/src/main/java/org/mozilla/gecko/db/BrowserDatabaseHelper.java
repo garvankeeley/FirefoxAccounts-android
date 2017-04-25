@@ -17,8 +17,8 @@ import java.util.Map;
 import org.mozilla.apache.commons.codec.binary.Base32;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.db.BrowserContract.ActivityStreamBlocklist;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
@@ -32,10 +32,10 @@ import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
 import org.mozilla.gecko.db.BrowserContract.SearchHistory;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserContract.UrlAnnotations;
-import org.mozilla.gecko.fxa.FirefoxAccounts;
-import org.mozilla.gecko.reader.SavedReaderViewHelper;
-import org.mozilla.gecko.sync.Utils;
-import org.mozilla.gecko.sync.repositories.android.RepoUtils;
+//import org.mozilla.gecko.fxa.FirefoxAccounts;
+//import org.mozilla.gecko.reader.SavedReaderViewHelper;
+//import org.mozilla.gecko.sync.Utils;
+//import org.mozilla.gecko.sync.repositories.android.RepoUtils;
 import org.mozilla.gecko.util.FileUtils;
 
 import static org.mozilla.gecko.db.DBUtils.qualifyColumn;
@@ -795,6 +795,8 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
      * @param historyExtensionDb Source History Extensions database
      * @param db Destination database
      */
+    // COMMENT OUT UNUSED FUNCTION.
+    /*
     private void copyHistoryExtensionDataToVisitsTable(final SQLiteDatabase historyExtensionDb, final SQLiteDatabase db) {
         final String historyExtensionTable = "HistoryExtension";
         final String columnGuid = "guid";
@@ -893,6 +895,7 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
             historyExtensionCursor.close();
         }
     }
+    */
 
     private boolean isGUIDPresentInHistoryTable(final SQLiteDatabase db, String guid) {
         final Cursor historyCursor = db.query(
@@ -1661,6 +1664,8 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
      * reading list items are placed into a "Reading List" folder, which is a subfolder of the mobile-bookmarks table.
      */
     private void upgradeDatabaseFrom30to31(SQLiteDatabase db) {
+        throw new IllegalStateException("Did not expect to upgrade db v30.");
+        /*
         // We only need to do the migration if reading-list items already exist. We could do a query of count(*) on
         // TABLE_READING_LIST, however if we are doing the migration, we'll need to query all items in the reading-list,
         // hence we might as well just query all items, and proceed with the migration if cursor.count > 0.
@@ -1787,9 +1792,13 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                 }
             }
         }
+        */
     }
 
     private void upgradeDatabaseFrom31to32(final SQLiteDatabase db) {
+        throw new IllegalStateException("Did not expect to actually upgrade db v31.");
+
+        /*
         debug("Adding visits table");
         createVisitsTable(db);
 
@@ -1850,6 +1859,7 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                 Log.e(LOGTAG, "Couldn't remove history extension database");
             }
         }
+        */
     }
 
     private void synthesizeAndInsertVisits(final SQLiteDatabase db, boolean markAsLocal) {
@@ -2141,7 +2151,7 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         // Note, this takes ~4-6ms to load on an N4 (compared to 20-50ms for most DB queries), and
         // is only done once, hence this shouldn't have noticeable impact on performance. Moreover
         // this is run on a background thread and therefore won't block UI code during startup.
-        SavedReaderViewHelper.getSavedReaderViewHelper(mContext).loadItems();
+        //SavedReaderViewHelper.getSavedReaderViewHelper(mContext).loadItems();
 
         Cursor cursor = null;
         try {
