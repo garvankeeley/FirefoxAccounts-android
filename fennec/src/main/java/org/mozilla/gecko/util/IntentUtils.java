@@ -14,7 +14,7 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.mozglue.SafeIntent;
+import org.mozilla.gecko.util.SafeIntent;
 
 import java.util.HashMap;
 import java.util.regex.Matcher;
