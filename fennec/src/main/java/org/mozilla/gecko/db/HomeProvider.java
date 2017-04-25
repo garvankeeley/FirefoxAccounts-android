@@ -9,7 +9,6 @@ import java.io.IOException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract.HomeItems;
 import org.mozilla.gecko.db.DBUtils;
 import org.mozilla.gecko.sqlite.SQLiteBridge;
@@ -104,6 +103,9 @@ public class HomeProvider extends SQLiteBridgeContentProvider {
      * Returns a cursor populated with static fake data.
      */
     private Cursor queryFakeItems(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+        // throw so we don't have to fix compile errors.
+        throw new IllegalStateException("Didn't expect fake items to get called");
+        /*
         JSONArray items = null;
         try {
             final String jsonString = RawResource.getAsString(getContext(), R.raw.fake_home_items);
@@ -134,6 +136,7 @@ public class HomeProvider extends SQLiteBridgeContentProvider {
             }
         }
         return c;
+        */
     }
 
     /**
