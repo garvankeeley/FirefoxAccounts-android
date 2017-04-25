@@ -9,7 +9,6 @@ import java.util.HashMap;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoProfile;
-import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.sqlite.SQLiteBridge;
@@ -137,12 +136,14 @@ public abstract class SQLiteBridgeContentProvider extends ContentProvider {
             dbNeedsSetup = true;
             Log.e(mLogTag, "Error getting version ", ex);
 
+            /*
             // if Gecko is not running, we should bail out. Otherwise we try to
             // let Gecko build the database for us
             if (!GeckoThread.isRunning()) {
                 Log.e(mLogTag, "Can not set up database. Gecko is not running");
                 return null;
             }
+            */
         }
 
         // If the database is not set up yet, or is the wrong schema version, we send an initialize

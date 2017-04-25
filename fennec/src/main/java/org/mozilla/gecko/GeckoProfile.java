@@ -209,10 +209,12 @@ public final class GeckoProfile {
 
         if (profileName == null && profileDir == null) {
             // If no profile info was passed in, look for the active profile or a default profile.
+            /*
             final GeckoProfile profile = GeckoThread.getActiveProfile();
             if (profile != null) {
                 return profile;
             }
+            */
 
             final String args;
             if (context instanceof Activity) {
@@ -372,15 +374,6 @@ public final class GeckoProfile {
 
     public boolean isCustomProfile() {
         return CUSTOM_PROFILE.equals(mName);
-    }
-
-    @RobocopTarget
-    public boolean inGuestMode() {
-        if (mInGuestMode == null) {
-            mInGuestMode = isGuestProfile(GeckoAppShell.getApplicationContext(),
-                                          mName, mProfileDir);
-        }
-        return mInGuestMode;
     }
 
     /**
@@ -987,6 +980,6 @@ public final class GeckoProfile {
         final GeckoBundle message = new GeckoBundle(2);
         message.putString("name", getName());
         message.putString("path", profileDir.getAbsolutePath());
-        EventDispatcher.getInstance().dispatch("Profile:Create", message);
+        //EventDispatcher.getInstance().dispatch("Profile:Create", message);
     }
 }
