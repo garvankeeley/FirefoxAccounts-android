@@ -15,7 +15,6 @@ import android.util.Log;
 import org.json.JSONException;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.db.BrowserContract.UrlAnnotations.Key;
-import org.mozilla.gecko.feeds.subscriptions.FeedSubscription;
 
 public class LocalUrlAnnotations implements UrlAnnotations {
     private static final String LOGTAG = "LocalUrlAnnotations";
@@ -105,38 +104,6 @@ public class LocalUrlAnnotations implements UrlAnnotations {
         return hasResultsForSelection(cr,
                 BrowserContract.UrlAnnotations.URL + " = ? AND " + BrowserContract.UrlAnnotations.KEY + " = ?",
                 new String[]{feedUrl, Key.FEED_SUBSCRIPTION.getDbValue()});
-    }
-
-    /**
-     * Insert the given feed subscription (Mapping from feed URL to the subscription object).
-     */
-    @Override
-    public void insertFeedSubscription(ContentResolver cr, FeedSubscription subscription) {
-        try {
-            insertAnnotation(cr, subscription.getFeedUrl(), Key.FEED_SUBSCRIPTION, subscription.toJSON().toString());
-        } catch (JSONException e) {
-            Log.w(LOGTAG, "Could not serialize subscription");
-        }
-    }
-
-    /**
-     * Update the feed subscription with new values.
-     */
-    @Override
-    public void updateFeedSubscription(ContentResolver cr, FeedSubscription subscription) {
-        try {
-            updateAnnotation(cr, subscription.getFeedUrl(), Key.FEED_SUBSCRIPTION, subscription.toJSON().toString());
-        } catch (JSONException e) {
-            Log.w(LOGTAG, "Could not serialize subscription");
-        }
-    }
-
-    /**
-     * Delete the subscription for the feed URL.
-     */
-    @Override
-    public void deleteFeedSubscription(ContentResolver cr, FeedSubscription subscription) {
-        deleteAnnotation(cr, subscription.getFeedUrl(), Key.FEED_SUBSCRIPTION);
     }
 
     private int deleteAnnotation(final ContentResolver cr, final String url, final Key key) {
