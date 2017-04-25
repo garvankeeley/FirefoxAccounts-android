@@ -33,7 +33,6 @@ public abstract class BrowserDB {
     }
 
     public abstract Searches getSearches();
-    public abstract TabsAccessor getTabsAccessor();
     public abstract URLMetadata getURLMetadata();
     @RobocopTarget public abstract UrlAnnotations getUrlAnnotations();
 

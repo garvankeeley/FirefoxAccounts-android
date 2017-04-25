@@ -122,7 +122,6 @@ public class LocalBrowserDB extends BrowserDB {
     private final Uri mPageMetadataWithProfile;
 
     private LocalSearches searches;
-    private LocalTabsAccessor tabsAccessor;
     private LocalURLMetadata urlMetadata;
     private LocalUrlAnnotations urlAnnotations;
 
@@ -160,7 +159,6 @@ public class LocalBrowserDB extends BrowserDB {
                                       .build();
 
         searches = new LocalSearches(mProfile);
-        tabsAccessor = new LocalTabsAccessor(mProfile);
         urlMetadata = new LocalURLMetadata(mProfile);
         urlAnnotations = new LocalUrlAnnotations(mProfile);
     }
@@ -168,11 +166,6 @@ public class LocalBrowserDB extends BrowserDB {
     @Override
     public Searches getSearches() {
         return searches;
-    }
-
-    @Override
-    public TabsAccessor getTabsAccessor() {
-        return tabsAccessor;
     }
 
     @Override
