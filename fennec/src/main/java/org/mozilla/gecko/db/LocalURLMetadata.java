@@ -17,8 +17,6 @@ import java.util.Set;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.icons.decoders.LoadFaviconResult;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.ContentResolver;
@@ -52,50 +50,6 @@ public class LocalURLMetadata implements URLMetadata {
     private static final int CACHE_SIZE = 9;
     // Note: Members of this cache are unmodifiable.
     private final LruCache<String, Map<String, Object>> cache = new LruCache<String, Map<String, Object>>(CACHE_SIZE);
-
-    /**
-     * Converts a JSON object into a unmodifiable Map of known metadata properties.
-     * Will throw away any properties that aren't stored in the database.
-     *
-     * Incoming data can include a list like: {touchIconList:{56:"http://x.com/56.png", 76:"http://x.com/76.png"}}.
-     * This will then be filtered to find the most appropriate touchIcon, i.e. the closest icon size that is larger
-     * than (or equal to) the preferred homescreen launcher icon size, which is then stored in the "touchIcon" property.
-     */
-    @Override
-    public Map<String, Object> fromJSON(JSONObject obj) {
-        Map<String, Object> data = new HashMap<String, Object>();
-
-        for (String key : COLUMNS) {
-            if (obj.has(key)) {
-                data.put(key, obj.optString(key));
-            }
-        }
-
-
-        try {
-            JSONObject icons;
-            if (obj.has("touchIconList") &&
-                    (icons = obj.getJSONObject("touchIconList")).length() > 0) {
-                int preferredSize = GeckoAppShell.getPreferredIconSize();
-
-                Iterator<String> keys = icons.keys();
-
-                ArrayList<Integer> sizes = new ArrayList<Integer>(icons.length());
-                while (keys.hasNext()) {
-                    sizes.add(new Integer(keys.next()));
-                }
-
-                final int bestSize = LoadFaviconResult.selectBestSizeFromList(sizes, preferredSize);
-                final String iconURL = icons.getString(Integer.toString(bestSize));
-
-                data.put(URLImageDataTable.TOUCH_ICON_COLUMN, iconURL);
-            }
-        } catch (JSONException e) {
-            Log.w(LOGTAG, "Exception processing touchIconList for LocalURLMetadata; ignoring.", e);
-        }
-
-        return Collections.unmodifiableMap(data);
-    }
 
     /**
      * Converts a Cursor into a unmodifiable Map of known metadata properties.

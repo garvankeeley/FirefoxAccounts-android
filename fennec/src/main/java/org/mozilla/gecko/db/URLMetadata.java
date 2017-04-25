@@ -17,7 +17,7 @@ import android.content.ContentResolver;
 
 @RobocopTarget
 public interface URLMetadata {
-    public Map<String, Object> fromJSON(JSONObject obj);
+    //public Map<String, Object> fromJSON(JSONObject obj);
     public Map<String, Map<String, Object>> getForURLs(final ContentResolver cr,
                                                        final Collection<String> urls,
                                                        final List<String> columns);
