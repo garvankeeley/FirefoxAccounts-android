@@ -12,10 +12,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.activitystream.ranking.HighlightsRanking;
 import org.mozilla.gecko.db.BrowserContract.ActivityStreamBlocklist;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Combined;
@@ -31,10 +29,10 @@ import org.mozilla.gecko.db.BrowserContract.TopSites;
 import org.mozilla.gecko.db.BrowserContract.UrlAnnotations;
 import org.mozilla.gecko.db.BrowserContract.PageMetadata;
 import org.mozilla.gecko.db.DBUtils.UpdateOperation;
-import org.mozilla.gecko.home.activitystream.model.Highlight;
-import org.mozilla.gecko.icons.IconsHelper;
-import org.mozilla.gecko.sync.Utils;
+//import org.mozilla.gecko.icons.IconsHelper;
+import org.mozilla.gecko.util.SyncUtils;
 import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
+import org.mozilla.gecko.util.SyncUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.BroadcastReceiver;
@@ -974,7 +972,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         }
 
         final String[] ignoreForTopSitesArgs = new String[] {
-                AboutPages.URL_FILTER
+                "about:%"
         };
 
         // Stuff the suggested sites into SQL: this allows us to filter pinned and topsites out of the suggested
@@ -1526,7 +1524,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         }
 
         if (!values.containsKey(Bookmarks.GUID)) {
-            values.put(Bookmarks.GUID, Utils.generateGuid());
+            values.put(Bookmarks.GUID, SyncUtils.generateGuid());
         }
 
         if (!values.containsKey(Bookmarks.POSITION)) {
@@ -1605,7 +1603,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
         // Generate GUID for new history entry. Don't override specified GUIDs.
         if (!values.containsKey(History.GUID)) {
-          values.put(History.GUID, Utils.generateGuid());
+          values.put(History.GUID, SyncUtils.generateGuid());
         }
 
         String url = values.getAsString(History.URL);
@@ -1780,6 +1778,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
     }
 
     private long insertFavicon(SQLiteDatabase db, ContentValues values) {
+        throw new IllegalStateException("didn't expect someone to insert a favicon");
+        /*
         String faviconUrl = values.getAsString(Favicons.URL);
         String pageUrl = null;
 
@@ -1809,6 +1809,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             updateFaviconIdsForUrl(db, pageUrl, faviconId);
         }
         return faviconId;
+        */
     }
 
     private int updateOrInsertFavicon(Uri uri, ContentValues values, String selection,
