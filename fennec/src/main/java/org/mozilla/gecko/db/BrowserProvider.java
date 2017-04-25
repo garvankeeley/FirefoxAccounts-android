@@ -879,6 +879,9 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
     }
 
     private Cursor getTopSites(final Uri uri) {
+        throw new IllegalStateException("Did not expect someone to query for top sites");
+
+        /*
         // In order to correctly merge the top and pinned sites we:
         //
         // 1. Generate a list of free ids for topsites - this is the positions that are NOT used by pinned sites.
@@ -1176,6 +1179,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         } finally {
             db.endTransaction();
         }
+        */
     }
 
     public Cursor getHighlightCandidates(final SQLiteDatabase db, String limit) {

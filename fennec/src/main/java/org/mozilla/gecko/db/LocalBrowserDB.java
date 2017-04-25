@@ -98,8 +98,6 @@ public class LocalBrowserDB extends BrowserDB {
     // Use wrapped Boolean so that we can have a null state
     private volatile Boolean mDesktopBookmarksExist;
 
-    private volatile SuggestedSites mSuggestedSites;
-
     // Constants used when importing history data from legacy browser.
     public static final String HISTORY_VISITS_DATE = "date";
     public static final String HISTORY_VISITS_COUNT = "visits";
@@ -1031,15 +1029,6 @@ public class LocalBrowserDB extends BrowserDB {
     }
 
     @Override
-    public boolean hideSuggestedSite(String url) {
-        if (mSuggestedSites == null) {
-            return false;
-        }
-
-        return mSuggestedSites.hideSite(url);
-    }
-
-    @Override
     public void updateThumbnailForUrl(ContentResolver cr, String uri,
             BitmapDrawable thumbnail) {
         // If a null thumbnail was passed in, delete the stored thumbnail for this url.
@@ -1475,45 +1464,6 @@ public class LocalBrowserDB extends BrowserDB {
         }
 
         return c;
-    }
-
-    @Override
-    public void setSuggestedSites(SuggestedSites suggestedSites) {
-        mSuggestedSites = suggestedSites;
-    }
-
-    @Override
-    public SuggestedSites getSuggestedSites() {
-        return mSuggestedSites;
-    }
-
-    @Override
-    public boolean hasSuggestedImageUrl(String url) {
-        if (mSuggestedSites == null) {
-            return false;
-        }
-        return mSuggestedSites.contains(url);
-    }
-
-    @Override
-    public String getSuggestedImageUrlForUrl(String url) {
-        if (mSuggestedSites == null) {
-            return null;
-        }
-        return mSuggestedSites.getImageUrlForUrl(url);
-    }
-
-    @Override
-    public int getSuggestedBackgroundColorForUrl(String url) {
-        if (mSuggestedSites == null) {
-            return 0;
-        }
-        final String bgColor = mSuggestedSites.getBackgroundColorForUrl(url);
-        if (bgColor != null) {
-            return Color.parseColor(bgColor);
-        }
-
-        return 0;
     }
 
     private static void appendUrlsFromCursor(List<String> urls, Cursor c) {

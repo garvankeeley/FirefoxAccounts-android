@@ -169,12 +169,12 @@ public abstract class BrowserDB {
 
     public abstract boolean isPinnedForAS(ContentResolver cr, String url);
 
-    public abstract boolean hideSuggestedSite(String url);
-    public abstract void setSuggestedSites(SuggestedSites suggestedSites);
-    public abstract SuggestedSites getSuggestedSites();
-    public abstract boolean hasSuggestedImageUrl(String url);
-    public abstract String getSuggestedImageUrlForUrl(String url);
-    public abstract int getSuggestedBackgroundColorForUrl(String url);
+    //public abstract boolean hideSuggestedSite(String url);
+    //public abstract void setSuggestedSites(SuggestedSites suggestedSites);
+    //public abstract SuggestedSites getSuggestedSites();
+    //public abstract boolean hasSuggestedImageUrl(String url);
+    //public abstract String getSuggestedImageUrlForUrl(String url);
+    //public abstract int getSuggestedBackgroundColorForUrl(String url);
 
     /**
      * Obtain a set of recently visited links to rank.
