@@ -12,8 +12,6 @@ import java.util.List;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.db.BrowserContract.ExpirePriority;
-import org.mozilla.gecko.distribution.Distribution;
-import org.mozilla.gecko.icons.decoders.LoadFaviconResult;
 
 import android.content.ContentProviderClient;
 import android.content.ContentProviderOperation;
@@ -43,13 +41,13 @@ public abstract class BrowserDB {
      * Add default bookmarks to the database.
      * Takes an offset; returns a new offset.
      */
-    public abstract int addDefaultBookmarks(Context context, ContentResolver cr, int offset);
+    //public abstract int addDefaultBookmarks(Context context, ContentResolver cr, int offset);
 
     /**
      * Add bookmarks from the provided distribution.
      * Takes an offset; returns a new offset.
      */
-    public abstract int addDistributionBookmarks(ContentResolver cr, Distribution distribution, int offset);
+    //public abstract int addDistributionBookmarks(ContentResolver cr, Distribution distribution, int offset);
 
     /**
      * Invalidate cached data.
@@ -129,7 +127,7 @@ public abstract class BrowserDB {
      * @param faviconURL The URL of the favicon to fetch from the database.
      * @return The decoded Bitmap from the database, if any. null if none is stored.
      */
-    public abstract LoadFaviconResult getFaviconForUrl(Context context, ContentResolver cr, String faviconURL);
+    //public abstract LoadFaviconResult getFaviconForUrl(Context context, ContentResolver cr, String faviconURL);
 
     /**
      * Try to find a usable favicon URL in the history or bookmarks table.

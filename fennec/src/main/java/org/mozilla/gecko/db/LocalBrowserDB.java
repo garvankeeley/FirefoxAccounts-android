@@ -24,7 +24,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.Telemetry;
+//import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract.ActivityStreamBlocklist;
@@ -38,13 +38,9 @@ import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserContract.TopSites;
 import org.mozilla.gecko.db.BrowserContract.Highlights;
 import org.mozilla.gecko.db.BrowserContract.PageMetadata;
-import org.mozilla.gecko.distribution.Distribution;
-import org.mozilla.gecko.icons.decoders.FaviconDecoder;
-import org.mozilla.gecko.icons.decoders.LoadFaviconResult;
-import org.mozilla.gecko.gfx.BitmapUtils;
-import org.mozilla.gecko.restrictions.Restrictions;
-import org.mozilla.gecko.sync.Utils;
-import org.mozilla.gecko.util.GeckoJarReader;
+//import org.mozilla.gecko.restrictions.Restrictions;
+import org.mozilla.gecko.util.SyncUtils;
+//import org.mozilla.gecko.util.GeckoJarReader;
 import org.mozilla.gecko.util.StringUtils;
 
 import android.content.ContentProviderClient;
@@ -220,239 +216,12 @@ public class LocalBrowserDB extends BrowserDB {
         }
     }
 
-    /**
-     * Add default bookmarks to the database.
-     * Takes an offset; returns a new offset.
-     */
-    @Override
-    public int addDefaultBookmarks(Context context, ContentResolver cr, final int offset) {
-        final long folderID = getFolderIdFromGuid(cr, Bookmarks.MOBILE_FOLDER_GUID);
-        if (folderID == FOLDER_NOT_FOUND) {
-            Log.e(LOGTAG, "No mobile folder: cannot add default bookmarks.");
-            return offset;
-        }
-
-        // Use reflection to walk the set of bookmark defaults.
-        // This is horrible.
-        final Class<?> stringsClass = R.string.class;
-        final Field[] fields = stringsClass.getFields();
-        final Pattern p = Pattern.compile("^bookmarkdefaults_title_");
-
-        int pos = offset;
-        final long now = System.currentTimeMillis();
-
-        final ArrayList<ContentValues> bookmarkValues = new ArrayList<ContentValues>();
-        final ArrayList<ContentValues> faviconValues = new ArrayList<ContentValues>();
-
-        // Count down from -offset into negative values to get new favicon IDs.
-        final NameCounter faviconIDs = new NameCounter((-1 - offset), -1);
-
-        for (int i = 0; i < fields.length; i++) {
-            final String name = fields[i].getName();
-            final Matcher m = p.matcher(name);
-            if (!m.find()) {
-                continue;
-            }
-
-            try {
-                if (Restrictions.isRestrictedProfile(context)) {
-                    // matching on variable name from strings.xml.in
-                    final String addons = "bookmarkdefaults_title_addons";
-                    final String regularSumo = "bookmarkdefaults_title_support";
-                    if (name.equals(addons) || name.equals(regularSumo)) {
-                        continue;
-                    }
-                }
-                if (!Restrictions.isRestrictedProfile(context)) {
-                    // if we're not in kidfox, skip the kidfox specific bookmark(s)
-                    if (name.startsWith("bookmarkdefaults_title_restricted")) {
-                        continue;
-                    }
-                }
-                final int titleID = fields[i].getInt(null);
-                final String title = context.getString(titleID);
-
-                final Field urlField = stringsClass.getField(name.replace("_title_", "_url_"));
-                final int urlID = urlField.getInt(null);
-                final String url = context.getString(urlID);
-
-                final ContentValues bookmarkValue = createBookmark(now, title, url, pos++, folderID);
-                bookmarkValues.add(bookmarkValue);
-
-                ConsumedInputStream faviconStream = getDefaultFaviconFromDrawable(context, name);
-                if (faviconStream == null) {
-                    faviconStream = getDefaultFaviconFromPath(context, name);
-                }
-
-                if (faviconStream == null) {
-                    continue;
-                }
-
-                // In the event that truncating the buffer fails, give up and move on.
-                byte[] icon;
-                try {
-                    icon = faviconStream.getTruncatedData();
-                } catch (OutOfMemoryError e) {
-                    continue;
-                }
-
-                final ContentValues iconValue = createFavicon(url, icon);
-
-                // Assign a reserved negative _id to each new favicon.
-                // For now, each name is expected to be unique, and duplicate
-                // icons will be duplicated in the DB. See Bug 1040806 Comment 8.
-                if (iconValue != null) {
-                    final int faviconID = faviconIDs.get(name);
-                    iconValue.put("_id", faviconID);
-                    bookmarkValue.put(Bookmarks.FAVICON_ID, faviconID);
-                    faviconValues.add(iconValue);
-                }
-            } catch (IllegalAccessException | IllegalArgumentException | NoSuchFieldException e) {
-                Log.wtf(LOGTAG, "Reflection failure.", e);
-            }
-        }
-
-        if (!faviconValues.isEmpty()) {
-            try {
-                cr.bulkInsert(mFaviconsUriWithProfile, faviconValues.toArray(new ContentValues[faviconValues.size()]));
-            } catch (Exception e) {
-                Log.e(LOGTAG, "Error bulk-inserting default favicons.", e);
-            }
-        }
-
-        if (!bookmarkValues.isEmpty()) {
-            try {
-                final int inserted = cr.bulkInsert(mBookmarksUriWithProfile, bookmarkValues.toArray(new ContentValues[bookmarkValues.size()]));
-                return offset + inserted;
-            } catch (Exception e) {
-                Log.e(LOGTAG, "Error bulk-inserting default bookmarks.", e);
-            }
-        }
-
-        return offset;
-    }
-
-    /**
-     * Add bookmarks from the provided distribution.
-     * Takes an offset; returns a new offset.
-     */
-    @Override
-    public int addDistributionBookmarks(ContentResolver cr, Distribution distribution, int offset) {
-        if (!distribution.exists()) {
-            Log.d(LOGTAG, "No distribution from which to add bookmarks.");
-            return offset;
-        }
-
-        final JSONArray bookmarks = distribution.getBookmarks();
-        if (bookmarks == null) {
-            Log.d(LOGTAG, "No distribution bookmarks.");
-            return offset;
-        }
-
-        final long folderID = getFolderIdFromGuid(cr, Bookmarks.MOBILE_FOLDER_GUID);
-        if (folderID == FOLDER_NOT_FOUND) {
-            Log.e(LOGTAG, "No mobile folder: cannot add distribution bookmarks.");
-            return offset;
-        }
-
-        final Locale locale = Locale.getDefault();
-        final long now = System.currentTimeMillis();
-        int mobilePos = offset;
-        int pinnedPos = 0;        // Assume nobody has pinned anything yet.
-
-        final ArrayList<ContentValues> bookmarkValues = new ArrayList<ContentValues>();
-        final ArrayList<ContentValues> faviconValues = new ArrayList<ContentValues>();
-
-        // Count down from -offset into negative values to get new favicon IDs.
-        final NameCounter faviconIDs = new NameCounter((-1 - offset), -1);
-
-        for (int i = 0; i < bookmarks.length(); i++) {
-            try {
-                final JSONObject bookmark = bookmarks.getJSONObject(i);
-
-                final String title = getLocalizedProperty(bookmark, "title", locale);
-                final String url = getLocalizedProperty(bookmark, "url", locale);
-                final long parent;
-                final int pos;
-                if (bookmark.has("pinned")) {
-                    parent = Bookmarks.FIXED_PINNED_LIST_ID;
-                    pos = pinnedPos++;
-                } else {
-                    parent = folderID;
-                    pos = mobilePos++;
-                }
-
-                final ContentValues bookmarkValue = createBookmark(now, title, url, pos, parent);
-                bookmarkValues.add(bookmarkValue);
-
-                // Return early if there is no icon for this bookmark.
-                if (!bookmark.has("icon")) {
-                    continue;
-                }
-
-                try {
-                    final String iconData = bookmark.getString("icon");
-
-                    byte[] icon = BitmapUtils.getBytesFromDataURI(iconData);
-                    if (icon == null) {
-                        continue;
-                    }
-
-                    final ContentValues iconValue = createFavicon(url, icon);
-                    if (iconValue == null) {
-                        continue;
-                    }
-
-                    /*
-                     * Find out if this icon is a duplicate. If it is, don't try
-                     * to insert it again, but reuse the shared ID.
-                     * Otherwise, assign a new reserved negative _id.
-                     * Duplicates won't be detected in default bookmarks, or
-                     * those already in the database.
-                     */
-                    final boolean seen = faviconIDs.has(iconData);
-                    final int faviconID = faviconIDs.get(iconData);
-
-                    iconValue.put("_id", faviconID);
-                    bookmarkValue.put(Bookmarks.FAVICON_ID, faviconID);
-
-                    if (!seen) {
-                        faviconValues.add(iconValue);
-                    }
-                } catch (JSONException e) {
-                    Log.e(LOGTAG, "Error creating distribution bookmark icon.", e);
-                }
-            } catch (JSONException e) {
-                Log.e(LOGTAG, "Error creating distribution bookmark.", e);
-            }
-        }
-
-        if (!faviconValues.isEmpty()) {
-            try {
-                cr.bulkInsert(mFaviconsUriWithProfile, faviconValues.toArray(new ContentValues[faviconValues.size()]));
-            } catch (Exception e) {
-                Log.e(LOGTAG, "Error bulk-inserting distribution favicons.", e);
-            }
-        }
-
-        if (!bookmarkValues.isEmpty()) {
-            try {
-                final int inserted = cr.bulkInsert(mBookmarksUriWithProfile, bookmarkValues.toArray(new ContentValues[bookmarkValues.size()]));
-                return offset + inserted;
-            } catch (Exception e) {
-                Log.e(LOGTAG, "Error bulk-inserting distribution bookmarks.", e);
-            }
-        }
-
-        return offset;
-    }
-
     private static ContentValues createBookmark(final long timestamp, final String title, final String url, final int pos, final long parent) {
         final ContentValues v = new ContentValues();
 
         v.put(Bookmarks.DATE_CREATED, timestamp);
         v.put(Bookmarks.DATE_MODIFIED, timestamp);
-        v.put(Bookmarks.GUID, Utils.generateGuid());
+        v.put(Bookmarks.GUID, SyncUtils.generateGuid());
 
         v.put(Bookmarks.PARENT, parent);
         v.put(Bookmarks.POSITION, pos);
@@ -492,27 +261,6 @@ public class LocalBrowserDB extends BrowserDB {
 
         // Default to the non-localized property name.
         return bookmark.getString(property);
-    }
-
-    private static int getFaviconId(String name) {
-        try {
-            Class<?> drawablesClass = R.raw.class;
-
-            // Look for a favicon with the id R.raw.bookmarkdefaults_favicon_*.
-            Field faviconField = drawablesClass.getField(name.replace("_title_", "_favicon_"));
-            faviconField.setAccessible(true);
-
-            return faviconField.getInt(null);
-        } catch (IllegalAccessException | NoSuchFieldException e) {
-            // We'll end up here for any default bookmark that doesn't have a favicon in
-            // resources/raw/ (i.e., about:firefox). When this happens, the Favicons service will
-            // fall back to the default branding icon for about pages. Non-about pages should always
-            // specify an icon; otherwise, the placeholder globe favicon will be used.
-            Log.d(LOGTAG, "No raw favicon resource found for " + name);
-        }
-
-        Log.e(LOGTAG, "Failed to find favicon resource ID for " + name);
-        return FAVICON_ID_NOT_FOUND;
     }
 
     @Override
@@ -588,33 +336,6 @@ public class LocalBrowserDB extends BrowserDB {
         } finally {
             cursor.close();
         }
-    }
-
-    /**
-     * Load a favicon from the omnijar.
-     * @return A ConsumedInputStream containing the bytes loaded from omnijar. This must be a format
-     *         compatible with the favicon decoder (most probably a PNG or ICO file).
-     */
-    private static ConsumedInputStream getDefaultFaviconFromPath(Context context, String name) {
-        final int faviconId = getFaviconId(name);
-        if (faviconId == FAVICON_ID_NOT_FOUND) {
-            return null;
-        }
-
-        final String bitmapPath = GeckoJarReader.getJarURL(context, context.getString(faviconId));
-        final InputStream iStream = GeckoJarReader.getStream(context, bitmapPath);
-
-        return IOUtils.readFully(iStream, DEFAULT_FAVICON_BUFFER_SIZE_BYTES);
-    }
-
-    private static ConsumedInputStream getDefaultFaviconFromDrawable(Context context, String name) {
-        int faviconId = getFaviconId(name);
-        if (faviconId == FAVICON_ID_NOT_FOUND) {
-            return null;
-        }
-
-        InputStream iStream = context.getResources().openRawResource(faviconId);
-        return IOUtils.readFully(iStream, DEFAULT_FAVICON_BUFFER_SIZE_BYTES);
     }
 
     // Invalidate cached data
@@ -928,7 +649,8 @@ public class LocalBrowserDB extends BrowserDB {
             // We'll add a fake "Desktop Bookmarks" folder to the root view if desktop
             // bookmarks exist, so that the user can still access non-mobile bookmarks.
             addDesktopFolder = desktopBookmarksExist(cr);
-            addScreenshotsFolder = AppConstants.SCREENSHOTS_IN_BOOKMARKS_ENABLED;
+            //addScreenshotsFolder = AppConstants.SCREENSHOTS_IN_BOOKMARKS_ENABLED;
+            addScreenshotsFolder = false;
 
             final int readingListItemCount = getBookmarkCountForFolder(cr, Bookmarks.FAKE_READINGLIST_SMARTFOLDER_ID);
             addReadingListFolder = (readingListItemCount > 0);
@@ -1268,58 +990,6 @@ public class LocalBrowserDB extends BrowserDB {
                 c.close();
             }
         }
-    }
-
-    /**
-     * Get the favicon from the database, if any, associated with the given favicon URL. (That is,
-     * the URL of the actual favicon image, not the URL of the page with which the favicon is associated.)
-     * @param cr The ContentResolver to use.
-     * @param faviconURL The URL of the favicon to fetch from the database.
-     * @return The decoded Bitmap from the database, if any. null if none is stored.
-     */
-    @Override
-    public LoadFaviconResult getFaviconForUrl(Context context, ContentResolver cr, String faviconURL) {
-        final Cursor c = cr.query(mFaviconsUriWithProfile,
-                                  new String[] { Favicons.DATA },
-                                  Favicons.URL + " = ? AND " + Favicons.DATA + " IS NOT NULL",
-                                  new String[] { faviconURL },
-                                  null);
-
-        boolean shouldDelete = false;
-        byte[] b = null;
-        try {
-            if (!c.moveToFirst()) {
-                return null;
-            }
-
-            final int faviconIndex = c.getColumnIndexOrThrow(Favicons.DATA);
-            try {
-                b = c.getBlob(faviconIndex);
-            } catch (IllegalStateException e) {
-                // This happens when the blob is more than 1MB: Bug 1106347.
-                // Delete that row.
-                shouldDelete = true;
-            }
-        } finally {
-            c.close();
-        }
-
-        if (shouldDelete) {
-            try {
-                Log.d(LOGTAG, "Deleting invalid favicon.");
-                cr.delete(mFaviconsUriWithProfile,
-                          Favicons.URL + " = ?",
-                          new String[] { faviconURL });
-            } catch (Exception e) {
-                // Do nothing.
-            }
-        }
-
-        if (b == null) {
-            return null;
-        }
-
-        return FaviconDecoder.decodeFavicon(context, b);
     }
 
     /**
@@ -1895,7 +1565,7 @@ public class LocalBrowserDB extends BrowserDB {
             final long end = SystemClock.uptimeMillis();
             final long took = end - start;
 
-            Telemetry.addToHistogram(mHistogramName, (int) Math.min(took, Integer.MAX_VALUE));
+            //Telemetry.addToHistogram(mHistogramName, (int) Math.min(took, Integer.MAX_VALUE));
             return cursor;
         }
     }

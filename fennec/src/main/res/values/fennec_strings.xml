@@ -1,4 +1,3 @@
-
 <?xml version="1.0" encoding="UTF-8"?><resources>
   <!-- copy/pasta from fennec build direven though this is in the accounts/ module -->
   <string name="moz_app_displayname">Fennec mcomella</string>
